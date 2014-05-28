@@ -1,3 +1,9 @@
+### Specify gem mirror source.
+
+* Added gem_source provisioner processing that updates the gem source used by root.  Working without internet access, but with a gem source mirror requires some way of specifying the gem source early and when the busser gem is installed.  Add "  gem_source <gem server url>" under provisioner in .kitchen.yml to set the gem mirror location.
+
+
+
 ## 1.2.1 / 2014-02-12
 
 ### Bug fixes
