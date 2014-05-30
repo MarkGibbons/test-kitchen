@@ -117,7 +117,9 @@ module Kitchen
       def gem_source_command
         unless config[:gem_source].nil?
           sudo_gem = sudo('/opt/chef/embedded/bin/gem')
-          "#{sudo_gem} sources --add #{config[:gem_source]}"
+          # Add the new gem source and remove the default.
+          # If one of the sources is inaccessible looking for any gem fails with some versions of ruby. 
+          "#{sudo_gem} sources --add #{config[:gem_source]}; #{sudo_gem} sources --remove http://rubygems.org/"
         end
       end
 
