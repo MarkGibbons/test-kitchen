@@ -73,12 +73,8 @@ module Kitchen
       # (see Base#run_command)
       def run_command
         cmd = modern? ? local_mode_command : shim_command
-
         prefix_command(
-          wrap_shell_code(
-            [cmd, *chef_client_args, last_exit_code].join(" ").
-            tap { |str| str.insert(0, reload_ps1_path) if windows_os? }
-          )
+          config[:ignore_proxy] ? shell_code(cmd) : wrap_shell_code(shell_code(cmd))
         )
       end
 
@@ -86,6 +82,11 @@ module Kitchen
 
       def last_exit_code
         "; exit $LastExitCode" if powershell_shell?
+      end
+
+      def shell_code(cmd)
+        [cmd, *chef_client_args, last_exit_code].join(" ").
+          tap { |str| str.insert(0, reload_ps1_path) if windows_os? }
       end
 
       # Adds optional flags to a chef-client command, depending on
