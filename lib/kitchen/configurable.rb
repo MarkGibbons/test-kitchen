@@ -254,9 +254,10 @@ module Kitchen
     # @api private
     def reload_ps1_path
       [
-        %{$env:PATH},
-        %{[System.Environment]::GetEnvironmentVariable("PATH","Machine")\n\n}
-      ].join(" = ")
+        "$env:PATH = try {",
+        "[System.Environment]::GetEnvironmentVariable('PATH','Machine')",
+        "} catch { $env:PATH }\n\n"
+      ].join("\n")
     end
 
     # Builds a shell environment variable assignment string for the
@@ -312,7 +313,11 @@ module Kitchen
     end
 
     def env_wrapped(code)
-      (proxy_settings << code).join("\n")
+      code_parts = proxy_settings
+      code_parts << shell_env_var("TEST_KITCHEN", 1)
+      code_parts << shell_env_var("CI", ENV["CI"]) if ENV["CI"]
+      code_parts << code
+      code_parts.join("\n")
     end
 
     def proxy_setting_keys

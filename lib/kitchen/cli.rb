@@ -119,6 +119,7 @@ module Kitchen
       update_config!
       perform("list", "list", args)
     end
+    map :status => :list
 
     desc "diagnose [INSTANCE|REGEXP|all]", "Show computed diagnostic configuration"
     method_option :loader,
@@ -135,6 +136,7 @@ module Kitchen
       :type => :boolean,
       :desc => "Include all diagnostics"
     log_options
+    test_base_path
     def diagnose(*args)
       update_config!
       perform("diagnose", "diagnose", args, :loader => @loader)
@@ -236,6 +238,13 @@ module Kitchen
     def login(*args)
       update_config!
       perform("login", "login", args)
+    end
+
+    desc "package INSTANCE|REGEXP", "package an instance"
+    log_options
+    def package(*args)
+      update_config!
+      perform("package", "package", args)
     end
 
     desc "exec INSTANCE|REGEXP -c REMOTE_COMMAND",

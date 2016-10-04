@@ -301,13 +301,13 @@ module Kitchen
                  "kitchen config. The run_list in your config will be ignored.")
             warn("Ignored run_list: #{config[:run_list].inspect}")
           end
-          policylock = policyfile.gsub(/\.rb\Z/, ".lock.json")
-          unless File.exist?(policylock)
-            Kitchen.mutex.synchronize do
-              Chef::Policyfile.new(policyfile, sandbox_path, logger).compile
-            end
+          policy = Chef::Policyfile.new(policyfile, sandbox_path,
+            :logger => logger,
+            :always_update => config[:always_update_cookbooks])
+          Kitchen.mutex.synchronize do
+            policy.compile
           end
-          policy_name = JSON.parse(IO.read(policylock))["name"]
+          policy_name = JSON.parse(IO.read(policy.lockfile))["name"]
           policy_group = "local"
           config[:attributes].merge(:policy_name => policy_name, :policy_group => policy_group)
         end
@@ -317,7 +317,9 @@ module Kitchen
         # @api private
         def resolve_with_policyfile
           Kitchen.mutex.synchronize do
-            Chef::Policyfile.new(policyfile, sandbox_path, logger).resolve
+            Chef::Policyfile.new(policyfile, sandbox_path,
+              :logger => logger,
+              :always_update => config[:always_update_cookbooks]).resolve
           end
         end
 
@@ -326,7 +328,9 @@ module Kitchen
         # @api private
         def resolve_with_berkshelf
           Kitchen.mutex.synchronize do
-            Chef::Berkshelf.new(berksfile, tmpbooks_dir, logger).resolve
+            Chef::Berkshelf.new(berksfile, tmpbooks_dir,
+              :logger => logger,
+              :always_update => config[:always_update_cookbooks]).resolve
           end
         end
 
@@ -335,7 +339,7 @@ module Kitchen
         # @api private
         def resolve_with_librarian
           Kitchen.mutex.synchronize do
-            Chef::Librarian.new(cheffile, tmpbooks_dir, logger).resolve
+            Chef::Librarian.new(cheffile, tmpbooks_dir, :logger => logger).resolve
           end
         end
 

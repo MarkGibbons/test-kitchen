@@ -899,7 +899,11 @@ describe Kitchen::Provisioner::ChefBase do
 
       describe "with a Policyfile under kitchen_root" do
 
-        let(:resolver) { stub(:resolve => true) }
+        let(:policyfile_path) { "#{kitchen_root}/Policyfile.rb" }
+        let(:policyfile_lock_path) { "#{kitchen_root}/Policyfile.lock.json" }
+        let(:resolver) {
+          stub(:compile => true, :resolve => true, :lockfile => policyfile_lock_path)
+        }
 
         describe "with the default name `Policyfile.rb`" do
           before do
@@ -952,13 +956,14 @@ POLICYFILE
             end
 
             it "uses uses the policyfile to resolve dependencies" do
+              resolver.expects(:compile)
               resolver.expects(:resolve)
 
               provisioner.create_sandbox
             end
 
             it "uses Kitchen.mutex for resolving" do
-              Kitchen.mutex.expects(:synchronize)
+              Kitchen.mutex.expects(:synchronize).twice
 
               provisioner.create_sandbox
             end
@@ -1018,6 +1023,7 @@ POLICYFILE
 
             it "uses uses the policyfile to resolve dependencies" do
               Kitchen::Provisioner::Chef::Policyfile.stubs(:load!)
+              resolver.expects(:compile)
               resolver.expects(:resolve)
 
               provisioner.create_sandbox
@@ -1030,6 +1036,7 @@ POLICYFILE
                 returns(resolver)
 
               Kitchen::Provisioner::Chef::Policyfile.stubs(:load!)
+              resolver.expects(:compile)
               resolver.expects(:resolve)
 
               provisioner.create_sandbox
@@ -1099,6 +1106,7 @@ POLICYFILE
 
             it "uses uses the policyfile to resolve dependencies" do
               Kitchen::Provisioner::Chef::Policyfile.stubs(:load!)
+              resolver.expects(:compile)
               resolver.expects(:resolve)
 
               provisioner.create_sandbox
@@ -1111,6 +1119,7 @@ POLICYFILE
                 returns(resolver)
 
               Kitchen::Provisioner::Chef::Policyfile.stubs(:load!)
+              resolver.expects(:compile)
               resolver.expects(:resolve)
 
               provisioner.create_sandbox

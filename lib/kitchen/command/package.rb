@@ -1,8 +1,5 @@
 # -*- encoding: utf-8 -*-
 #
-# Author:: Fletcher Nichol (<fnichol@nichol.ca>)
-#
-# Copyright (C) 2012, 2013, Fletcher Nichol
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require "kitchen/command"
+
 module Kitchen
-  VERSION = "1.13.2"
+
+  module Command
+
+    # Execute command on remote instance.
+    #
+    class Package < Kitchen::Command::Base
+
+      # Invoke the command.
+      def call
+        results = parse_subcommand(args.first)
+        results.each do |instance|
+          banner "Package on #{instance.name}."
+          instance.package_action
+        end
+      end
+    end
+  end
 end
