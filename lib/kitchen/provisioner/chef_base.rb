@@ -68,6 +68,8 @@ module Kitchen
         attributes/**/* definitions/**/* files/**/* libraries/**/*
         providers/**/* recipes/**/* resources/**/* templates/**/*
       ].join(",")
+      # to ease upgrades, allow the user to turn deprecation warnings into errors
+      default_config :deprecations_as_errors, false
 
       default_config :data_path do |provisioner|
         provisioner.calculate_path("data")
@@ -155,6 +157,7 @@ module Kitchen
       # @return [Hash] an option hash for the install commands
       # @api private
       def install_options
+        add_omnibus_directory_option if instance.driver.cache_directory
         project = /\s*-P (\w+)\s*/.match(config[:chef_omnibus_install_options])
         {
           :omnibus_url => config[:chef_omnibus_url],
@@ -166,6 +169,19 @@ module Kitchen
           [:install_msi_url, :http_proxy, :https_proxy].each do |key|
             opts[key] = config[key] if config.key? key
           end
+        end
+      end
+
+      # Verify if the "omnibus_dir_option" has already been passed, if so we
+      # don't use the @driver.cache_directory
+      #
+      # @api private
+      def add_omnibus_directory_option
+        cache_dir_option = "#{omnibus_dir_option} #{instance.driver.cache_directory}"
+        if config[:chef_omnibus_install_options].nil?
+          config[:chef_omnibus_install_options] = cache_dir_option
+        elsif config[:chef_omnibus_install_options].match(/\s*#{omnibus_dir_option}\s*/).nil?
+          config[:chef_omnibus_install_options] << " " << cache_dir_option
         end
       end
 
@@ -219,7 +235,8 @@ module Kitchen
           :chef_server_url  => "http://127.0.0.1:8889",
           :encrypted_data_bag_secret => remote_path_join(
             root, "encrypted_data_bag_secret"
-          )
+          ),
+          :treat_deprecation_warnings_as_errors => config[:deprecations_as_errors]
         }
       end
 
@@ -326,6 +343,13 @@ module Kitchen
         else
           install_from_file(installer.install_command)
         end
+      end
+
+      # @return [String] Correct option per platform to specify the the
+      #                  cache directory
+      # @api private
+      def omnibus_dir_option
+        windows_os? ? "-download_directory" : "-d"
       end
 
       def install_from_file(command)
